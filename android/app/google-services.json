@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "772420008111",
+    "project_id": "teckspark-barbearia",
+    "storage_bucket": "teckspark-barbearia.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:772420008111:android:ee0febe68a24ec8566bc5a",
+        "android_client_info": {
+          "package_name": "br.com.techspark.barbearia"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA0EUFLJHhymzm-PYPsSfZ0Y0yWhUBr-Ek"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:772420008111:android:836b9c32d9b7967f66bc5a",
+        "android_client_info": {
+          "package_name": "com.example.teck_spark_barbearia"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA0EUFLJHhymzm-PYPsSfZ0Y0yWhUBr-Ek"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
