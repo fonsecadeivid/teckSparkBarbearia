@@ -8,6 +8,7 @@ import '../../../../shared/stores/auth_store.dart';
 import '../../../../shared/models/user_model.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
+import '../../../../core/constants/user_types.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -222,7 +223,7 @@ class _ProfilePageState extends State<ProfilePage> {
             const Divider(),
             _buildInfoRow(
               'Tipo',
-              user.userType == 'barber' ? 'Barbeiro' : 'Cliente',
+              UserTypes.getDisplayName(user.userType),
               Icons.category_outlined,
             ),
             const Divider(),
@@ -334,4 +335,3 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 }
-

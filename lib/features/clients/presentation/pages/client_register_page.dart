@@ -197,4 +197,3 @@ class _ClientRegisterPageState extends State<ClientRegisterPage> {
     );
   }
 }
-

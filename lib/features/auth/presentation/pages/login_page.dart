@@ -17,12 +17,16 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _emailFocusNode = FocusNode();
+  final _passwordFocusNode = FocusNode();
   bool _obscurePassword = true;
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _emailFocusNode.dispose();
+    _passwordFocusNode.dispose();
     super.dispose();
   }
 
@@ -47,7 +51,7 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
           child: Form(
             key: _formKey,
@@ -55,6 +59,7 @@ class _LoginPageState extends State<LoginPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                const SizedBox(height: 40),
                 // Logo e título
                 Column(
                   children: [
@@ -93,7 +98,12 @@ class _LoginPageState extends State<LoginPage> {
                 // Campo de email
                 TextFormField(
                   controller: _emailController,
+                  focusNode: _emailFocusNode,
                   keyboardType: TextInputType.emailAddress,
+                  textInputAction: TextInputAction.next,
+                  onFieldSubmitted: (_) {
+                    _passwordFocusNode.requestFocus();
+                  },
                   decoration: const InputDecoration(
                     labelText: 'E-mail',
                     prefixIcon: Icon(Icons.email_outlined),
@@ -113,7 +123,12 @@ class _LoginPageState extends State<LoginPage> {
                 // Campo de senha
                 TextFormField(
                   controller: _passwordController,
+                  focusNode: _passwordFocusNode,
                   obscureText: _obscurePassword,
+                  textInputAction: TextInputAction.done,
+                  onFieldSubmitted: (_) {
+                    _handleLogin();
+                  },
                   decoration: InputDecoration(
                     labelText: 'Senha',
                     prefixIcon: const Icon(Icons.lock_outlined),
@@ -153,7 +168,7 @@ class _LoginPageState extends State<LoginPage> {
                             padding: const EdgeInsets.all(12),
                             margin: const EdgeInsets.only(bottom: 16),
                             decoration: BoxDecoration(
-                              color: AppColors.error.withOpacity(0.1),
+                              color: AppColors.error.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(color: AppColors.error),
                             ),
@@ -206,6 +221,7 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ],
                 ),
+                const SizedBox(height: 40),
               ],
             ),
           ),

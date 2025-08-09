@@ -123,6 +123,23 @@ abstract class _AppointmentStoreBase with Store {
   }
 
   @action
+  Future<void> loadAppointments(String barbershopId) async {
+    try {
+      setLoading(true);
+      clearError();
+
+      final appointmentsList = await _appointmentService
+          .getAppointmentsByBarbershop(barbershopId);
+      appointments.clear();
+      appointments.addAll(appointmentsList);
+    } catch (e) {
+      setErrorMessage(e.toString());
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  @action
   Future<void> loadAppointmentsByBarbershop(String barbershopId) async {
     try {
       setLoading(true);

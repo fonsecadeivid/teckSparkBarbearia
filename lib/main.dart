@@ -14,6 +14,7 @@ import 'features/services/presentation/pages/services_list_page.dart';
 import 'features/services/presentation/pages/service_register_page.dart';
 import 'features/appointments/presentation/pages/appointment_page.dart';
 import 'features/profile/presentation/pages/profile_page.dart';
+import 'features/dashboard/presentation/pages/dashboard_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -49,6 +50,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => const LoginPage(),
         '/register': (context) => const RegisterPage(),
+        '/dashboard': (context) => const DashboardPage(),
         '/clients': (context) => const ClientsListPage(),
         '/clients/register': (context) => const ClientRegisterPage(),
         '/services': (context) => const ServicesListPage(),

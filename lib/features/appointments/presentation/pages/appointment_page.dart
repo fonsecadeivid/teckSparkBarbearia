@@ -18,6 +18,7 @@ class AppointmentPage extends StatefulWidget {
 }
 
 class _AppointmentPageState extends State<AppointmentPage> {
+  final _formKey = GlobalKey<FormState>();
   ServiceModel? _selectedService;
   ClientModel? _selectedClient;
   DateTime _selectedDate = DateTime.now();
@@ -123,62 +124,90 @@ class _AppointmentPageState extends State<AppointmentPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Novo Agendamento'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Título
-              Text(
-                'Agendar Serviço',
-                style: AppTextStyles.h2.copyWith(color: AppColors.primary),
-                textAlign: TextAlign.center,
+    return Observer(
+      builder: (_) {
+        final authStore = context.read<AuthStore>();
+
+        // Verificar se o usuário tem acesso
+        if (!authStore.canManageAppointments && !authStore.isClient) {
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('Agendamentos'),
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+            ),
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.lock, size: 64, color: AppColors.error),
+                  const SizedBox(height: 16),
+                  Text('Acesso Negado', style: AppTextStyles.h3),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Você não tem permissão para acessar agendamentos.',
+                    style: AppTextStyles.bodyMedium,
+                    textAlign: TextAlign.center,
+                  ),
+                ],
               ),
-              const SizedBox(height: 8),
-              Text(
-                'Selecione o serviço, cliente e horário',
-                style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 32),
+            ),
+          );
+        }
 
-              // Seleção de serviço
-              _buildServiceSelection(),
-              const SizedBox(height: 24),
-
-              // Seleção de cliente
-              _buildClientSelection(),
-              const SizedBox(height: 24),
-
-              // Seleção de data
-              _buildDateSelection(),
-              const SizedBox(height: 24),
-
-              // Seleção de horário
-              _buildTimeSelection(),
-              const SizedBox(height: 24),
-
-              // Campo de observações
-              _buildNotesField(),
-              const SizedBox(height: 32),
-
-              // Botão de agendamento
-              _buildAppointmentButton(),
-            ],
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Agendamentos'),
+            backgroundColor: AppColors.primary,
+            foregroundColor: Colors.white,
           ),
-        ),
-      ),
+          body: Observer(
+            builder: (_) {
+              final appointmentStore = context.read<AppointmentStore>();
+
+              if (appointmentStore.isLoading) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              return SingleChildScrollView(
+                padding: const EdgeInsets.all(16.0),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Seleção de cliente (apenas para barbeiros)
+                      if (authStore.canManageAppointments) ...[
+                        _buildClientSelection(),
+                        const SizedBox(height: 16),
+                      ],
+
+                      // Seleção de serviço
+                      _buildServiceSelection(),
+                      const SizedBox(height: 16),
+
+                      // Seleção de data
+                      _buildDateSelection(),
+                      const SizedBox(height: 16),
+
+                      // Seleção de horário
+                      _buildTimeSelection(),
+                      const SizedBox(height: 16),
+
+                      // Observações
+                      _buildObservations(),
+                      const SizedBox(height: 24),
+
+                      // Botão de agendar
+                      _buildSubmitButton(),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        );
+      },
     );
   }
 
@@ -429,6 +458,10 @@ class _AppointmentPageState extends State<AppointmentPage> {
     );
   }
 
+  Widget _buildObservations() {
+    return _buildNotesField();
+  }
+
   Widget _buildNotesField() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -451,7 +484,7 @@ class _AppointmentPageState extends State<AppointmentPage> {
     );
   }
 
-  Widget _buildAppointmentButton() {
+  Widget _buildSubmitButton() {
     return Observer(
       builder: (_) {
         final appointmentStore = context.read<AppointmentStore>();
@@ -474,22 +507,36 @@ class _AppointmentPageState extends State<AppointmentPage> {
                   ),
                 ),
               ),
-            ElevatedButton(
-              onPressed: appointmentStore.isLoading
-                  ? null
-                  : _handleCreateAppointment,
-              child: appointmentStore.isLoading
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          AppColors.surface,
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: appointmentStore.isLoading
+                    ? null
+                    : _handleCreateAppointment,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+                child: appointmentStore.isLoading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
+                        ),
+                      )
+                    : const Text(
+                        'Agendar',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                    )
-                  : const Text('Agendar'),
+              ),
             ),
           ],
         );
@@ -497,4 +544,3 @@ class _AppointmentPageState extends State<AppointmentPage> {
     );
   }
 }
-

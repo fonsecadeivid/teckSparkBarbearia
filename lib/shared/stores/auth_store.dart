@@ -1,6 +1,7 @@
 import 'package:mobx/mobx.dart';
 import '../models/user_model.dart';
 import '../services/auth_service.dart';
+import '../../core/constants/user_types.dart';
 
 part 'auth_store.g.dart';
 
@@ -25,10 +26,28 @@ abstract class _AuthStoreBase with Store {
   bool get isLoggedIn => currentUser != null && isAuthenticated;
 
   @computed
-  bool get isBarber => currentUser?.userType == 'barber';
+  bool get isBarber =>
+      currentUser != null && UserTypes.isBarber(currentUser!.userType);
 
   @computed
-  bool get isClient => currentUser?.userType == 'client';
+  bool get isOwner =>
+      currentUser != null && UserTypes.isOwner(currentUser!.userType);
+
+  @computed
+  bool get isClient =>
+      currentUser != null && UserTypes.isClient(currentUser!.userType);
+
+  @computed
+  bool get canAccessDashboard => isOwner;
+
+  @computed
+  bool get canManageClients => isBarber;
+
+  @computed
+  bool get canManageServices => isBarber;
+
+  @computed
+  bool get canManageAppointments => isBarber;
 
   @action
   void setCurrentUser(UserModel? user) {

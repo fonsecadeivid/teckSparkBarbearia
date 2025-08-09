@@ -162,6 +162,10 @@ class _RegisterPageState extends State<RegisterPage> {
                   items: const [
                     DropdownMenuItem(value: 'client', child: Text('Cliente')),
                     DropdownMenuItem(value: 'barber', child: Text('Barbeiro')),
+                    DropdownMenuItem(
+                      value: 'owner',
+                      child: Text('Dono da Barbearia'),
+                    ),
                   ],
                   onChanged: (value) {
                     setState(() {
@@ -246,7 +250,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             padding: const EdgeInsets.all(12),
                             margin: const EdgeInsets.only(bottom: 16),
                             decoration: BoxDecoration(
-                              color: AppColors.error.withOpacity(0.1),
+                              color: AppColors.error.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(color: AppColors.error),
                             ),
