@@ -4,8 +4,11 @@ class UserModel {
   final String email;
   final String phone;
   final String? photoUrl;
-  final String userType; // 'client' ou 'barber'
+  final String userType; // 'client', 'barber' ou 'owner'
   final String barbershopId; // ID da barbearia
+  final String? cpfCnpj; // CPF/CNPJ (apenas para proprietários)
+  final String? address; // Endereço completo (apenas para proprietários)
+  final String? barbershopName; // Nome da barbearia (apenas para proprietários)
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -17,6 +20,9 @@ class UserModel {
     this.photoUrl,
     required this.userType,
     required this.barbershopId,
+    this.cpfCnpj,
+    this.address,
+    this.barbershopName,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -30,6 +36,9 @@ class UserModel {
       photoUrl: json['photoUrl'],
       userType: json['userType'] ?? 'client',
       barbershopId: json['barbershopId'] ?? '',
+      cpfCnpj: json['cpfCnpj'],
+      address: json['address'],
+      barbershopName: json['barbershopName'],
       createdAt: DateTime.parse(
         json['createdAt'] ?? DateTime.now().toIso8601String(),
       ),
@@ -48,6 +57,9 @@ class UserModel {
       'photoUrl': photoUrl,
       'userType': userType,
       'barbershopId': barbershopId,
+      'cpfCnpj': cpfCnpj,
+      'address': address,
+      'barbershopName': barbershopName,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
     };
@@ -61,6 +73,9 @@ class UserModel {
     String? photoUrl,
     String? userType,
     String? barbershopId,
+    String? cpfCnpj,
+    String? address,
+    String? barbershopName,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -72,10 +87,11 @@ class UserModel {
       photoUrl: photoUrl ?? this.photoUrl,
       userType: userType ?? this.userType,
       barbershopId: barbershopId ?? this.barbershopId,
+      cpfCnpj: cpfCnpj ?? this.cpfCnpj,
+      address: address ?? this.address,
+      barbershopName: barbershopName ?? this.barbershopName,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 }
-
-

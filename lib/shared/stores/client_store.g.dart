@@ -100,6 +100,7 @@ mixin _$ClientStore on _ClientStoreBase, Store {
     required String email,
     required String phone,
     required String barbershopId,
+    DateTime? birthDate,
   }) {
     return _$createClientAsyncAction.run(
       () => super.createClient(
@@ -107,6 +108,7 @@ mixin _$ClientStore on _ClientStoreBase, Store {
         email: email,
         phone: phone,
         barbershopId: barbershopId,
+        birthDate: birthDate,
       ),
     );
   }
@@ -119,6 +121,33 @@ mixin _$ClientStore on _ClientStoreBase, Store {
   @override
   Future<void> loadClients(String barbershopId) {
     return _$loadClientsAsyncAction.run(() => super.loadClients(barbershopId));
+  }
+
+  late final _$loadClientsWithBirthdayTodayAsyncAction = AsyncAction(
+    '_ClientStoreBase.loadClientsWithBirthdayToday',
+    context: context,
+  );
+
+  @override
+  Future<void> loadClientsWithBirthdayToday(String barbershopId) {
+    return _$loadClientsWithBirthdayTodayAsyncAction.run(
+      () => super.loadClientsWithBirthdayToday(barbershopId),
+    );
+  }
+
+  late final _$loadClientsWithBirthdayInNextDaysAsyncAction = AsyncAction(
+    '_ClientStoreBase.loadClientsWithBirthdayInNextDays',
+    context: context,
+  );
+
+  @override
+  Future<void> loadClientsWithBirthdayInNextDays(
+    String barbershopId,
+    int days,
+  ) {
+    return _$loadClientsWithBirthdayInNextDaysAsyncAction.run(
+      () => super.loadClientsWithBirthdayInNextDays(barbershopId, days),
+    );
   }
 
   late final _$updateClientAsyncAction = AsyncAction(

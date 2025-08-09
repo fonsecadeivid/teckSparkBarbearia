@@ -1,5 +1,7 @@
 # 🔐 Sistema de Controle de Acesso - Tech Spark Barbearia
 
+> **📋 Nota:** Este arquivo foi consolidado no [PROJETO_COMPLETO.md](./PROJETO_COMPLETO.md)
+
 ## 🎯 Visão Geral
 
 Implementei um sistema completo de controle de acesso baseado no tipo de usuário, garantindo que cada usuário tenha acesso apenas às funcionalidades apropriadas para seu papel na barbearia.
@@ -70,153 +72,193 @@ bool get canManageServices => isBarber;
 
 @computed
 bool get canManageAppointments => isBarber;
+
+@computed
+bool get canManageBarbershops => isOwner;
 ```
 
 ## 🎨 Interface Adaptativa
 
-### **Página Inicial Dinâmica**
-- **Clientes:** Veem apenas "Agendar"
-- **Barbeiros:** Veem "Agendar", "Clientes", "Serviços"
-- **Donos:** Veem "Dashboard", "Agendar", "Clientes", "Serviços"
+### **Página Inicial por Tipo de Usuário**
 
-### **Verificação de Acesso por Página**
-Cada página verifica as permissões antes de exibir o conteúdo:
+#### **Dono (`owner`)**
+- 🏠 **Dashboard** - Métricas e análises
+- 🏪 **Nova Barbearia** - Cadastrar barbearias
+- 📅 **Agendar** - Gerenciar agendamentos
+- 👥 **Clientes** - Gerenciar clientes
+- ✂️ **Serviços** - Gerenciar serviços
 
+#### **Barbeiro (`barber`)**
+- 📅 **Agendar** - Gerenciar agendamentos
+- 👥 **Clientes** - Gerenciar clientes
+- ✂️ **Serviços** - Gerenciar serviços
+
+#### **Cliente (`client`)**
+- 📅 **Agendar** - Agendar serviços
+
+## 🔐 Páginas Protegidas
+
+### **Dashboard** (`/dashboard`)
+- **Acesso:** Apenas donos
+- **Proteção:** Verificação `authStore.canAccessDashboard`
+- **Fallback:** Tela de "Acesso Negado"
+
+### **Cadastro de Barbearias** (`/barbershop/register`)
+- **Acesso:** Apenas donos
+- **Proteção:** Verificação `authStore.canManageBarbershops`
+- **Fallback:** Redirecionamento para home
+
+### **Gestão de Clientes** (`/clients`)
+- **Acesso:** Barbeiros e donos
+- **Proteção:** Verificação `authStore.canManageClients`
+- **Fallback:** Tela de "Acesso Negado"
+
+### **Gestão de Serviços** (`/services`)
+- **Acesso:** Barbeiros e donos
+- **Proteção:** Verificação `authStore.canManageServices`
+- **Fallback:** Tela de "Acesso Negado"
+
+### **Agendamentos** (`/appointments`)
+- **Acesso:** Todos os usuários
+- **Proteção:** Verificação `authStore.canManageAppointments || authStore.isClient`
+- **Fallback:** Tela de "Acesso Negado"
+
+## 🛡️ Implementação de Segurança
+
+### **1. Verificação no Frontend**
 ```dart
-// Exemplo: Dashboard
-if (!authStore.canAccessDashboard) {
-  return Scaffold(
-    appBar: AppBar(title: const Text('Dashboard')),
-    body: Center(
-      child: Column(
-        children: [
-          const Icon(Icons.lock, size: 64, color: AppColors.error),
-          const SizedBox(height: 16),
-          Text('Acesso Negado', style: AppTextStyles.h3),
-          const SizedBox(height: 8),
-          Text('Apenas donos da barbearia podem acessar o dashboard.'),
-        ],
-      ),
-    ),
+@override
+Widget build(BuildContext context) {
+  return Observer(
+    builder: (_) {
+      final authStore = context.read<AuthStore>();
+      
+      // Verificar se o usuário tem acesso
+      if (!authStore.canAccessDashboard) {
+        return Scaffold(
+          appBar: AppBar(title: const Text('Dashboard')),
+          body: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.lock, size: 64, color: AppColors.error),
+                const SizedBox(height: 16),
+                Text('Acesso Negado', style: AppTextStyles.h3),
+                const SizedBox(height: 8),
+                Text(
+                  'Apenas donos da barbearia podem acessar o dashboard.',
+                  style: AppTextStyles.bodyMedium,
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+      
+      // Conteúdo da página
+      return _buildDashboardContent();
+    },
   );
 }
 ```
 
-## 🔒 Páginas Protegidas
+### **2. Verificação no Backend**
+```dart
+// Exemplo de verificação no Firestore Rules
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Usuários podem ler apenas seus próprios dados
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Barbearias - apenas donos podem gerenciar
+    match /barbershops/{barbershopId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && 
+        resource.data.ownerId == request.auth.uid;
+    }
+    
+    // Clientes - apenas barbeiros e donos podem gerenciar
+    match /clients/{clientId} {
+      allow read, write: if request.auth != null && 
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userType in ['barber', 'owner']);
+    }
+  }
+}
+```
 
-### **Dashboard Analytics** (`/dashboard`)
-- **Acesso:** Apenas donos (`owner`)
-- **Funcionalidades:**
-  - Métricas em tempo real
-  - Gráficos de agendamentos
-  - Faturamento semanal
-  - Serviços populares
-  - Agendamentos do dia
+## 📊 Monitoramento e Logs
 
-### **Gestão de Clientes** (`/clients`)
-- **Acesso:** Barbeiros e donos (`barber`, `owner`)
-- **Funcionalidades:**
-  - Listar clientes
-  - Cadastrar novos clientes
-  - Editar dados
-  - Excluir clientes
+### **Logs de Acesso**
+- Tentativas de acesso negado
+- Ações realizadas por usuário
+- Mudanças de permissões
+- Atividades suspeitas
 
-### **Gestão de Serviços** (`/services`)
-- **Acesso:** Barbeiros e donos (`barber`, `owner`)
-- **Funcionalidades:**
-  - Listar serviços
-  - Cadastrar novos serviços
-  - Editar serviços
-  - Excluir serviços
+### **Métricas**
+- Usuários ativos por tipo
+- Páginas mais acessadas
+- Tempo de sessão
+- Taxa de conversão
 
-### **Agendamentos** (`/appointments`)
-- **Acesso:** Todos os usuários
-- **Funcionalidades:**
-  - **Clientes:** Agendar para si mesmos
-  - **Barbeiros/Donos:** Agendar para qualquer cliente
+## 🔄 Fluxo de Autenticação
 
-## 🎯 Benefícios Implementados
+### **1. Login**
+```
+Usuário → Login → Verificação de tipo → Redirecionamento baseado em permissões
+```
 
-### **Segurança**
+### **2. Verificação de Permissões**
+```
+Página → Verificação de acesso → Conteúdo ou Fallback
+```
+
+### **3. Logout**
+```
+Usuário → Logout → Limpeza de dados → Redirecionamento para login
+```
+
+## 🎯 Benefícios do Sistema
+
+### **1. Segurança**
 - ✅ Controle granular de acesso
-- ✅ Verificação em tempo real
+- ✅ Verificação em múltiplas camadas
+- ✅ Proteção contra acesso não autorizado
+
+### **2. Usabilidade**
 - ✅ Interface adaptativa
-- ✅ Mensagens de erro claras
+- ✅ Feedback claro
+- ✅ Experiência personalizada
 
-### **Experiência do Usuário**
-- ✅ Interface limpa e focada
-- ✅ Navegação intuitiva
-- ✅ Feedback visual de permissões
-- ✅ Estados de loading apropriados
-
-### **Gestão de Negócio**
-- ✅ Separação clara de responsabilidades
-- ✅ Dashboard exclusivo para donos
-- ✅ Controle operacional para barbeiros
-- ✅ Autonomia para clientes
-
-## 🚀 Funcionalidades Exclusivas
-
-### **Dashboard Analytics (Apenas Donos)**
-- **Métricas Principais:**
-  - Agendamentos do dia
-  - Clientes ativos
-  - Serviços ativos
-  - Faturamento mensal
-
-- **Gráficos Interativos:**
-  - Agendamentos por dia (últimos 7 dias)
-  - Faturamento semanal
-  - Serviços populares
-
-- **Lista de Agendamentos:**
-  - Agendamentos de hoje
-  - Status colorido
-  - Informações detalhadas
-
-## 📊 Fluxo de Dados
-
-### **Carregamento Inteligente**
-1. **Verificação de Permissão:** Antes de carregar dados
-2. **Carregamento Paralelo:** Dados carregados simultaneamente
-3. **Cache Inteligente:** Dados reutilizados quando possível
-4. **Refresh Controlado:** Atualização manual e automática
-
-### **Estados de Interface**
-- **Loading:** Indicador de carregamento
-- **Empty:** Estado vazio com call-to-action
-- **Error:** Tratamento de erros elegante
-- **Success:** Feedback de sucesso
-
-## 🔧 Configuração
-
-### **Adicionar Novo Tipo de Usuário**
-1. Adicionar constante em `UserTypes`
-2. Implementar método de verificação no `AuthStore`
-3. Atualizar interface conforme necessário
-4. Testar permissões
-
-### **Adicionar Nova Página Protegida**
-1. Implementar verificação de acesso
-2. Adicionar mensagem de erro apropriada
-3. Testar com diferentes tipos de usuário
-4. Documentar permissões
-
-## 📝 Notas de Desenvolvimento
-
-### **Boas Práticas Implementadas**
-- ✅ Verificação de permissões consistente
-- ✅ Interface adaptativa
-- ✅ Mensagens de erro claras
-- ✅ Estados de loading apropriados
+### **3. Manutenibilidade**
+- ✅ Código organizado
+- ✅ Fácil extensão
 - ✅ Documentação completa
+
+### **4. Escalabilidade**
+- ✅ Suporte a novos tipos de usuário
+- ✅ Permissões customizáveis
+- ✅ Arquitetura flexível
+
+## 📝 Notas de Implementação
+
+### **Boas Práticas**
+- ✅ Verificação consistente
+- ✅ Fallbacks apropriados
+- ✅ Feedback ao usuário
+- ✅ Logs de auditoria
 
 ### **Considerações Técnicas**
 - **Performance:** Verificações otimizadas
-- **Segurança:** Controle de acesso robusto
+- **Segurança:** Múltiplas camadas
 - **Usabilidade:** Interface intuitiva
-- **Manutenibilidade:** Código bem estruturado
+- **Manutenibilidade:** Código limpo
 
 ---
 
-*Este sistema garante que cada usuário tenha acesso apenas às funcionalidades apropriadas para seu papel, proporcionando uma experiência segura e eficiente.*
+**📋 Para informações completas e atualizadas, consulte o [PROJETO_COMPLETO.md](./PROJETO_COMPLETO.md)**
+
+*Este documento foi consolidado no arquivo principal do projeto.*

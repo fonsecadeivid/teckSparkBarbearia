@@ -82,6 +82,21 @@ class HomePage extends StatelessWidget {
       );
     }
 
+    // Cadastrar Barbearia - apenas para donos
+    if (authStore.canManageBarbershops) {
+      actionCards.add(
+        _buildActionCard(
+          context,
+          'Nova Barbearia',
+          Icons.store,
+          AppColors.warning,
+          () {
+            Navigator.of(context).pushNamed('/barbershop/register');
+          },
+        ),
+      );
+    }
+
     // Agendamentos - para barbeiros e clientes
     actionCards.add(
       _buildActionCard(

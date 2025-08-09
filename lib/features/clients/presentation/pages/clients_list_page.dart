@@ -69,6 +69,13 @@ class _ClientsListPageState extends State<ClientsListPage> {
             foregroundColor: Colors.white,
             actions: [
               IconButton(
+                icon: const Icon(Icons.cake),
+                onPressed: () {
+                  Navigator.of(context).pushNamed('/clients/birthday');
+                },
+                tooltip: 'Clientes Aniversariantes',
+              ),
+              IconButton(
                 icon: const Icon(Icons.add),
                 onPressed: () {
                   Navigator.of(context).pushNamed('/clients/register');
@@ -158,6 +165,55 @@ class _ClientsListPageState extends State<ClientsListPage> {
                           children: [
                             Text(client.email, style: AppTextStyles.bodySmall),
                             Text(client.phone, style: AppTextStyles.bodySmall),
+                            if (client.birthDate != null) ...[
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.cake,
+                                    size: 14,
+                                    color: client.isBirthdayToday
+                                        ? AppColors.success
+                                        : AppColors.textSecondary,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '${client.formattedBirthDate} (${client.age} anos)',
+                                    style: AppTextStyles.bodySmall.copyWith(
+                                      color: client.isBirthdayToday
+                                          ? AppColors.success
+                                          : AppColors.textSecondary,
+                                      fontWeight: client.isBirthdayToday
+                                          ? FontWeight.bold
+                                          : FontWeight.normal,
+                                    ),
+                                  ),
+                                  if (client.isBirthdayToday) ...[
+                                    const SizedBox(width: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 2,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.success.withValues(
+                                          alpha: 0.1,
+                                        ),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Text(
+                                        '🎂 Aniversário!',
+                                        style: AppTextStyles.bodySmall.copyWith(
+                                          color: AppColors.success,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 10,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ],
                           ],
                         ),
                         trailing: PopupMenuButton<String>(

@@ -20,6 +20,9 @@ class AuthService {
     required String phone,
     required String userType,
     required String barbershopId,
+    String? cpfCnpj,
+    String? address,
+    String? barbershopName,
   }) async {
     try {
       // Criar usuário no Firebase Auth
@@ -34,6 +37,9 @@ class AuthService {
         phone: phone,
         userType: userType,
         barbershopId: barbershopId,
+        cpfCnpj: cpfCnpj,
+        address: address,
+        barbershopName: barbershopName,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
@@ -137,4 +143,3 @@ class AuthService {
     return 'Erro inesperado. Tente novamente.';
   }
 }
-

@@ -18,6 +18,7 @@ class _ClientRegisterPageState extends State<ClientRegisterPage> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
+  DateTime? _selectedBirthDate;
 
   @override
   void dispose() {
@@ -25,6 +26,25 @@ class _ClientRegisterPageState extends State<ClientRegisterPage> {
     _emailController.dispose();
     _phoneController.dispose();
     super.dispose();
+  }
+
+  Future<void> _selectBirthDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now().subtract(
+        const Duration(days: 6570),
+      ), // 18 anos atrás
+      firstDate: DateTime.now().subtract(
+        const Duration(days: 36500),
+      ), // 100 anos atrás
+      lastDate: DateTime.now(),
+      locale: const Locale('pt', 'BR'),
+    );
+    if (picked != null && picked != _selectedBirthDate) {
+      setState(() {
+        _selectedBirthDate = picked;
+      });
+    }
   }
 
   void _handleRegister() async {
@@ -37,6 +57,7 @@ class _ClientRegisterPageState extends State<ClientRegisterPage> {
         email: _emailController.text.trim(),
         phone: _phoneController.text.trim(),
         barbershopId: authStore.currentUser?.barbershopId ?? 'barbearia_1',
+        birthDate: _selectedBirthDate,
       );
 
       if (clientStore.errorMessage == null && mounted) {
@@ -143,6 +164,49 @@ class _ClientRegisterPageState extends State<ClientRegisterPage> {
                     }
                     return null;
                   },
+                ),
+                const SizedBox(height: 16),
+
+                // Campo de data de nascimento
+                InkWell(
+                  onTap: () => _selectBirthDate(context),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 16,
+                    ),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade400),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.calendar_today, color: Colors.grey),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            _selectedBirthDate != null
+                                ? 'Data de Nascimento: ${_selectedBirthDate!.day.toString().padLeft(2, '0')}/${_selectedBirthDate!.month.toString().padLeft(2, '0')}/${_selectedBirthDate!.year}'
+                                : 'Data de Nascimento (opcional)',
+                            style: TextStyle(
+                              color: _selectedBirthDate != null
+                                  ? Colors.black
+                                  : Colors.grey.shade600,
+                            ),
+                          ),
+                        ),
+                        if (_selectedBirthDate != null)
+                          IconButton(
+                            icon: const Icon(Icons.clear, color: Colors.grey),
+                            onPressed: () {
+                              setState(() {
+                                _selectedBirthDate = null;
+                              });
+                            },
+                          ),
+                      ],
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 32),
 

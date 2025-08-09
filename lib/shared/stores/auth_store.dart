@@ -49,6 +49,9 @@ abstract class _AuthStoreBase with Store {
   @computed
   bool get canManageAppointments => isBarber;
 
+  @computed
+  bool get canManageBarbershops => isOwner;
+
   @action
   void setCurrentUser(UserModel? user) {
     currentUser = user;
@@ -78,6 +81,9 @@ abstract class _AuthStoreBase with Store {
     required String phone,
     required String userType,
     required String barbershopId,
+    String? cpfCnpj,
+    String? address,
+    String? barbershopName,
   }) async {
     try {
       setLoading(true);
@@ -90,12 +96,16 @@ abstract class _AuthStoreBase with Store {
         phone: phone,
         userType: userType,
         barbershopId: barbershopId,
+        cpfCnpj: cpfCnpj,
+        address: address,
+        barbershopName: barbershopName,
       );
 
       // Buscar dados do usuário criado
       final userData = await _authService.getUserData(
         _authService.currentUser!.uid,
       );
+
       if (userData != null) {
         setCurrentUser(userData);
       }

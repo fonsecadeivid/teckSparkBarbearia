@@ -12,6 +12,7 @@ class ClientService {
     required String email,
     required String phone,
     required String barbershopId,
+    DateTime? birthDate,
   }) async {
     try {
       final String clientId = _uuid.v4();
@@ -22,6 +23,7 @@ class ClientService {
         email: email,
         phone: phone,
         barbershopId: barbershopId,
+        birthDate: birthDate,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
@@ -117,6 +119,76 @@ class ClientService {
     }
   }
 
+  // Buscar clientes aniversariantes hoje
+  Future<List<ClientModel>> getClientsWithBirthdayToday(
+    String barbershopId,
+  ) async {
+    try {
+      final QuerySnapshot querySnapshot = await _firestore
+          .collection('clients')
+          .where('barbershopId', isEqualTo: barbershopId)
+          .get();
+
+      final List<ClientModel> clients = querySnapshot.docs
+          .map(
+            (doc) => ClientModel.fromJson(doc.data() as Map<String, dynamic>),
+          )
+          .toList();
+
+      // Filtrar clientes que fazem aniversário hoje
+      return clients.where((client) => client.isBirthdayToday).toList();
+    } catch (e) {
+      throw 'Erro ao buscar clientes aniversariantes: $e';
+    }
+  }
+
+  // Buscar clientes aniversariantes nos próximos X dias
+  Future<List<ClientModel>> getClientsWithBirthdayInNextDays(
+    String barbershopId,
+    int days,
+  ) async {
+    try {
+      final QuerySnapshot querySnapshot = await _firestore
+          .collection('clients')
+          .where('barbershopId', isEqualTo: barbershopId)
+          .get();
+
+      final List<ClientModel> clients = querySnapshot.docs
+          .map(
+            (doc) => ClientModel.fromJson(doc.data() as Map<String, dynamic>),
+          )
+          .toList();
+
+      // Filtrar clientes que fazem aniversário nos próximos X dias
+      return clients
+          .where((client) => client.isBirthdayInNextDays(days))
+          .toList();
+    } catch (e) {
+      throw 'Erro ao buscar clientes aniversariantes: $e';
+    }
+  }
+
+  // Buscar todos os clientes com data de nascimento
+  Future<List<ClientModel>> getClientsWithBirthDate(String barbershopId) async {
+    try {
+      final QuerySnapshot querySnapshot = await _firestore
+          .collection('clients')
+          .where('barbershopId', isEqualTo: barbershopId)
+          .get();
+
+      final List<ClientModel> clients = querySnapshot.docs
+          .map(
+            (doc) => ClientModel.fromJson(doc.data() as Map<String, dynamic>),
+          )
+          .toList();
+
+      // Filtrar apenas clientes com data de nascimento
+      return clients.where((client) => client.birthDate != null).toList();
+    } catch (e) {
+      throw 'Erro ao buscar clientes com data de nascimento: $e';
+    }
+  }
+
   // Buscar cliente por telefone
   Future<ClientModel?> getClientByPhone(
     String phone,
@@ -141,4 +213,3 @@ class ClientService {
     }
   }
 }
-

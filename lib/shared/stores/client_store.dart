@@ -50,6 +50,7 @@ abstract class _ClientStoreBase with Store {
     required String email,
     required String phone,
     required String barbershopId,
+    DateTime? birthDate,
   }) async {
     try {
       setLoading(true);
@@ -78,6 +79,7 @@ abstract class _ClientStoreBase with Store {
         email: email,
         phone: phone,
         barbershopId: barbershopId,
+        birthDate: birthDate,
       );
 
       clients.insert(0, newClient);
@@ -96,6 +98,46 @@ abstract class _ClientStoreBase with Store {
 
       final clientsList = await _clientService.getClientsByBarbershop(
         barbershopId,
+      );
+      clients.clear();
+      clients.addAll(clientsList);
+    } catch (e) {
+      setErrorMessage(e.toString());
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  @action
+  Future<void> loadClientsWithBirthdayToday(String barbershopId) async {
+    try {
+      setLoading(true);
+      clearError();
+
+      final clientsList = await _clientService.getClientsWithBirthdayToday(
+        barbershopId,
+      );
+      clients.clear();
+      clients.addAll(clientsList);
+    } catch (e) {
+      setErrorMessage(e.toString());
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  @action
+  Future<void> loadClientsWithBirthdayInNextDays(
+    String barbershopId,
+    int days,
+  ) async {
+    try {
+      setLoading(true);
+      clearError();
+
+      final clientsList = await _clientService.getClientsWithBirthdayInNextDays(
+        barbershopId,
+        days,
       );
       clients.clear();
       clients.addAll(clientsList);
@@ -158,4 +200,3 @@ abstract class _ClientStoreBase with Store {
     clients.clear();
   }
 }
-

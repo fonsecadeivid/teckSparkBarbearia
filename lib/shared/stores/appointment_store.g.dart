@@ -177,6 +177,18 @@ mixin _$AppointmentStore on _AppointmentStoreBase, Store {
     );
   }
 
+  late final _$loadAppointmentsAsyncAction = AsyncAction(
+    '_AppointmentStoreBase.loadAppointments',
+    context: context,
+  );
+
+  @override
+  Future<void> loadAppointments(String barbershopId) {
+    return _$loadAppointmentsAsyncAction.run(
+      () => super.loadAppointments(barbershopId),
+    );
+  }
+
   late final _$loadAppointmentsByBarbershopAsyncAction = AsyncAction(
     '_AppointmentStoreBase.loadAppointmentsByBarbershop',
     context: context,

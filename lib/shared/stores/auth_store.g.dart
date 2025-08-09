@@ -23,6 +23,13 @@ mixin _$AuthStore on _AuthStoreBase, Store {
     () => super.isBarber,
     name: '_AuthStoreBase.isBarber',
   )).value;
+  Computed<bool>? _$isOwnerComputed;
+
+  @override
+  bool get isOwner => (_$isOwnerComputed ??= Computed<bool>(
+    () => super.isOwner,
+    name: '_AuthStoreBase.isOwner',
+  )).value;
   Computed<bool>? _$isClientComputed;
 
   @override
@@ -30,6 +37,44 @@ mixin _$AuthStore on _AuthStoreBase, Store {
     () => super.isClient,
     name: '_AuthStoreBase.isClient',
   )).value;
+  Computed<bool>? _$canAccessDashboardComputed;
+
+  @override
+  bool get canAccessDashboard =>
+      (_$canAccessDashboardComputed ??= Computed<bool>(
+        () => super.canAccessDashboard,
+        name: '_AuthStoreBase.canAccessDashboard',
+      )).value;
+  Computed<bool>? _$canManageClientsComputed;
+
+  @override
+  bool get canManageClients => (_$canManageClientsComputed ??= Computed<bool>(
+    () => super.canManageClients,
+    name: '_AuthStoreBase.canManageClients',
+  )).value;
+  Computed<bool>? _$canManageServicesComputed;
+
+  @override
+  bool get canManageServices => (_$canManageServicesComputed ??= Computed<bool>(
+    () => super.canManageServices,
+    name: '_AuthStoreBase.canManageServices',
+  )).value;
+  Computed<bool>? _$canManageAppointmentsComputed;
+
+  @override
+  bool get canManageAppointments =>
+      (_$canManageAppointmentsComputed ??= Computed<bool>(
+        () => super.canManageAppointments,
+        name: '_AuthStoreBase.canManageAppointments',
+      )).value;
+  Computed<bool>? _$canManageBarbershopsComputed;
+
+  @override
+  bool get canManageBarbershops =>
+      (_$canManageBarbershopsComputed ??= Computed<bool>(
+        () => super.canManageBarbershops,
+        name: '_AuthStoreBase.canManageBarbershops',
+      )).value;
 
   late final _$currentUserAtom = Atom(
     name: '_AuthStoreBase.currentUser',
@@ -116,6 +161,9 @@ mixin _$AuthStore on _AuthStoreBase, Store {
     required String phone,
     required String userType,
     required String barbershopId,
+    String? cpfCnpj,
+    String? address,
+    String? barbershopName,
   }) {
     return _$signUpAsyncAction.run(
       () => super.signUp(
@@ -125,6 +173,9 @@ mixin _$AuthStore on _AuthStoreBase, Store {
         phone: phone,
         userType: userType,
         barbershopId: barbershopId,
+        cpfCnpj: cpfCnpj,
+        address: address,
+        barbershopName: barbershopName,
       ),
     );
   }
@@ -235,7 +286,13 @@ errorMessage: ${errorMessage},
 isAuthenticated: ${isAuthenticated},
 isLoggedIn: ${isLoggedIn},
 isBarber: ${isBarber},
-isClient: ${isClient}
+isOwner: ${isOwner},
+isClient: ${isClient},
+canAccessDashboard: ${canAccessDashboard},
+canManageClients: ${canManageClients},
+canManageServices: ${canManageServices},
+canManageAppointments: ${canManageAppointments},
+canManageBarbershops: ${canManageBarbershops}
     ''';
   }
 }

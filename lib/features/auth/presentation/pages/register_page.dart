@@ -2,12 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:provider/provider.dart';
 import '../../../../shared/stores/auth_store.dart';
+import '../../../../shared/stores/barbershop_store.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../features/home/presentation/pages/home_page.dart';
+import '../../../../features/barbershop/presentation/pages/barbershop_register_page.dart';
 
 class RegisterPage extends StatefulWidget {
-  const RegisterPage({super.key});
+  final String userType;
+
+  const RegisterPage({super.key, required this.userType});
 
   @override
   State<RegisterPage> createState() => _RegisterPageState();
@@ -20,10 +24,24 @@ class _RegisterPageState extends State<RegisterPage> {
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  final _cpfCnpjController = TextEditingController();
+  final _addressController = TextEditingController();
+  final _barbershopNameController = TextEditingController();
+  final _birthDateController = TextEditingController();
+
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
-  String _selectedUserType = 'client';
-  String _selectedBarbershopId = 'barbearia_1'; // Temporário
+  DateTime? _selectedBirthDate;
+  String? _selectedBarbershopId;
+  List<Map<String, dynamic>> _availableBarbershops = [];
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.userType == 'client') {
+      _loadBarbershops();
+    }
+  }
 
   @override
   void dispose() {
@@ -32,7 +50,43 @@ class _RegisterPageState extends State<RegisterPage> {
     _phoneController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _cpfCnpjController.dispose();
+    _addressController.dispose();
+    _barbershopNameController.dispose();
+    _birthDateController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadBarbershops() async {
+    final barbershopStore = context.read<BarbershopStore>();
+    await barbershopStore.loadActiveBarbershops();
+
+    setState(() {
+      _availableBarbershops = barbershopStore.barbershops
+          .map((barbershop) => {'id': barbershop.id, 'name': barbershop.name})
+          .toList();
+    });
+  }
+
+  Future<void> _selectBirthDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now().subtract(
+        const Duration(days: 6570),
+      ), // 18 anos atrás
+      firstDate: DateTime.now().subtract(
+        const Duration(days: 36500),
+      ), // 100 anos atrás
+      lastDate: DateTime.now(),
+      locale: const Locale('pt', 'BR'),
+    );
+    if (picked != null && picked != _selectedBirthDate) {
+      setState(() {
+        _selectedBirthDate = picked;
+        _birthDateController.text =
+            '${picked.day.toString().padLeft(2, '0')}/${picked.month.toString().padLeft(2, '0')}/${picked.year}';
+      });
+    }
   }
 
   void _handleRegister() async {
@@ -44,15 +98,36 @@ class _RegisterPageState extends State<RegisterPage> {
         password: _passwordController.text,
         name: _nameController.text.trim(),
         phone: _phoneController.text.trim(),
-        userType: _selectedUserType,
-        barbershopId: _selectedBarbershopId,
+        userType: widget.userType,
+        barbershopId: widget.userType == 'client'
+            ? _selectedBarbershopId ?? ''
+            : '',
+        cpfCnpj: widget.userType == 'owner'
+            ? _cpfCnpjController.text.trim()
+            : null,
+        address: widget.userType == 'owner'
+            ? _addressController.text.trim()
+            : null,
+        barbershopName: widget.userType == 'owner'
+            ? _barbershopNameController.text.trim()
+            : null,
       );
 
       if (authStore.isLoggedIn && mounted) {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const HomePage()),
-          (route) => false,
-        );
+        // Se for dono, redirecionar para cadastro de barbearia
+        if (widget.userType == 'owner') {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(
+              builder: (context) => const BarbershopRegisterPage(),
+            ),
+            (route) => false,
+          );
+        } else {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (context) => const HomePage()),
+            (route) => false,
+          );
+        }
       }
     }
   }
@@ -61,7 +136,13 @@ class _RegisterPageState extends State<RegisterPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Cadastro'),
+        title: Text(
+          widget.userType == 'client'
+              ? 'Cadastro de Cliente'
+              : 'Cadastro de Proprietário',
+        ),
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.of(context).pop(),
@@ -77,13 +158,17 @@ class _RegisterPageState extends State<RegisterPage> {
               children: [
                 // Título
                 Text(
-                  'Criar Conta',
+                  widget.userType == 'client'
+                      ? 'Cadastro de Cliente'
+                      : 'Cadastro de Proprietário',
                   style: AppTextStyles.h2.copyWith(color: AppColors.primary),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Preencha os dados abaixo para criar sua conta',
+                  widget.userType == 'client'
+                      ? 'Preencha os dados para criar sua conta de cliente'
+                      : 'Preencha os dados para criar sua conta de proprietário',
                   style: AppTextStyles.bodyMedium.copyWith(
                     color: AppColors.textSecondary,
                   ),
@@ -152,28 +237,144 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
                 const SizedBox(height: 16),
 
-                // Tipo de usuário
-                DropdownButtonFormField<String>(
-                  value: _selectedUserType,
-                  decoration: const InputDecoration(
-                    labelText: 'Tipo de usuário',
-                    prefixIcon: Icon(Icons.category_outlined),
-                  ),
-                  items: const [
-                    DropdownMenuItem(value: 'client', child: Text('Cliente')),
-                    DropdownMenuItem(value: 'barber', child: Text('Barbeiro')),
-                    DropdownMenuItem(
-                      value: 'owner',
-                      child: Text('Dono da Barbearia'),
+                // Campos específicos para cliente
+                if (widget.userType == 'client') ...[
+                  // Campo de data de nascimento
+                  InkWell(
+                    onTap: () => _selectBirthDate(context),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 16,
+                      ),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.shade400),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.calendar_today, color: Colors.grey),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              _selectedBirthDate != null
+                                  ? 'Data de Nascimento: ${_birthDateController.text}'
+                                  : 'Data de Nascimento (opcional)',
+                              style: TextStyle(
+                                color: _selectedBirthDate != null
+                                    ? Colors.black
+                                    : Colors.grey.shade600,
+                              ),
+                            ),
+                          ),
+                          if (_selectedBirthDate != null)
+                            IconButton(
+                              icon: const Icon(Icons.clear, color: Colors.grey),
+                              onPressed: () {
+                                setState(() {
+                                  _selectedBirthDate = null;
+                                  _birthDateController.clear();
+                                });
+                              },
+                            ),
+                        ],
+                      ),
                     ),
-                  ],
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedUserType = value!;
-                    });
-                  },
-                ),
-                const SizedBox(height: 16),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Campo de seleção de barbearia
+                  DropdownButtonFormField<String>(
+                    value: _selectedBarbershopId,
+                    decoration: const InputDecoration(
+                      labelText: 'Barbearia',
+                      prefixIcon: Icon(Icons.store),
+                    ),
+                    items: _availableBarbershops.map((barbershop) {
+                      return DropdownMenuItem<String>(
+                        value: barbershop['id'] as String,
+                        child: Text(barbershop['name'] as String),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedBarbershopId = value;
+                      });
+                    },
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Por favor, selecione uma barbearia';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                ],
+
+                // Campos específicos para proprietário
+                if (widget.userType == 'owner') ...[
+                  // Campo de CPF/CNPJ
+                  TextFormField(
+                    controller: _cpfCnpjController,
+                    keyboardType: TextInputType.text,
+                    decoration: const InputDecoration(
+                      labelText: 'CPF/CNPJ',
+                      prefixIcon: Icon(Icons.badge_outlined),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Por favor, insira seu CPF ou CNPJ';
+                      }
+                      if (value.length < 11) {
+                        return 'Por favor, insira um CPF ou CNPJ válido';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Campo de endereço
+                  TextFormField(
+                    controller: _addressController,
+                    keyboardType: TextInputType.streetAddress,
+                    maxLines: 3,
+                    decoration: const InputDecoration(
+                      labelText: 'Endereço completo',
+                      prefixIcon: Icon(Icons.location_on_outlined),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Por favor, insira seu endereço';
+                      }
+                      if (value.length < 10) {
+                        return 'Por favor, insira um endereço válido';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Campo de nome da barbearia
+                  TextFormField(
+                    controller: _barbershopNameController,
+                    keyboardType: TextInputType.text,
+                    textCapitalization: TextCapitalization.words,
+                    decoration: const InputDecoration(
+                      labelText: 'Nome da Barbearia',
+                      prefixIcon: Icon(Icons.store_outlined),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Por favor, insira o nome da barbearia';
+                      }
+                      if (value.length < 3) {
+                        return 'O nome da barbearia deve ter pelo menos 3 caracteres';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                ],
 
                 // Campo de senha
                 TextFormField(
@@ -276,31 +477,19 @@ class _RegisterPageState extends State<RegisterPage> {
                                     ),
                                   ),
                                 )
-                              : const Text('Cadastrar'),
+                              : Text(
+                                  widget.userType == 'client'
+                                      ? 'Cadastrar Cliente'
+                                      : 'Cadastrar Proprietário',
+                                  style: AppTextStyles.bodyMedium.copyWith(
+                                    color: AppColors.surface,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                         ),
                       ],
                     );
                   },
-                ),
-                const SizedBox(height: 16),
-
-                // Link para login
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text('Já tem uma conta? ', style: AppTextStyles.bodyMedium),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
-                      child: Text(
-                        'Faça login',
-                        style: AppTextStyles.buttonMedium.copyWith(
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ),
-                  ],
                 ),
               ],
             ),
